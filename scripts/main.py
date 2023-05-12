@@ -135,7 +135,5 @@ def main():
     c1 = ec.Point(curve, c1x, c1y)
     c2 = ec.Point(curve, c2x, c2y)
 
-    print("The encrypted sum is: ", c1, c2)
-
     cleartext = decrypt(c1, c2, G, x)
     print("The cleartext is: ", cleartext)
