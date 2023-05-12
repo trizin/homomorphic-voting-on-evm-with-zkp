@@ -114,20 +114,20 @@ def main():
     (vote1_c1, vote1_c2, proof1) = encrypt(vote1, n, y, G)
     (vote2_c1, vote2_c2, proof2) = encrypt(vote2, n, y, G)
 
-    vote1_c1_x_hex = int(vote1_c1.x)
-    vote1_c1_y_hex = int(vote1_c1.y)
-    vote1_c2_x_hex = int(vote1_c2.x)
-    vote1_c2_y_hex = int(vote1_c2.y)
-    vote2_c1_x_hex = int(vote2_c1.x)
-    vote2_c1_y_hex = int(vote2_c1.y)
-    vote2_c2_x_hex = int(vote2_c2.x)
-    vote2_c2_y_hex = int(vote2_c2.y)
+    vote1_c1_x = int(vote1_c1.x)
+    vote1_c1_y = int(vote1_c1.y)
+    vote1_c2_x = int(vote1_c2.x)
+    vote1_c2_y = int(vote1_c2.y)
+    vote2_c1_x = int(vote2_c1.x)
+    vote2_c1_y = int(vote2_c1.y)
+    vote2_c2_x = int(vote2_c2.x)
+    vote2_c2_y = int(vote2_c2.y)
 
     print("Casting vote:")
-    contract.castVote(vote1_c1_x_hex, vote1_c1_y_hex, vote1_c2_x_hex,
-                      vote1_c2_y_hex, proof1, stake1, {"from": voter1})
-    contract.castVote(vote2_c1_x_hex, vote2_c1_y_hex, vote2_c2_x_hex,
-                      vote2_c2_y_hex, proof2, stake2, {"from": voter2})
+    contract.castVote(vote1_c1_x, vote1_c1_y, vote1_c2_x,
+                      vote1_c2_y, proof1, stake1, {"from": voter1})
+    contract.castVote(vote2_c1_x, vote2_c1_y, vote2_c2_x,
+                      vote2_c2_y, proof2, stake2, {"from": voter2})
 
     (c1x, c1y), (c2x, c2y), _ = contract.encryptedSum()
 
