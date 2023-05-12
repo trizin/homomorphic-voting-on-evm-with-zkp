@@ -88,7 +88,7 @@ def decrypt(C1, C2, G, x):
 
 
 def genkey(G, n):
-    x = int.from_bytes(get_random_bytes(16), "big") % n
+    x = int.from_bytes(get_random_bytes(32), "big") % n
     y = x * G
     return x, y
 
