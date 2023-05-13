@@ -12,7 +12,7 @@ Clone the repository and install the dependencies:
 
 ```shell
 git clone https://github.com/trizin/homomorphic-on-chain-voting.git
-pip install eth-brownie
+pip install eth-brownie tinyec pycrypto
 ```
 
 To experience the magic, simply execute the command:
