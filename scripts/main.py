@@ -103,7 +103,7 @@ def genkey(G, n):
     return x, y
 
 
-def organization():
+def deploy_voting_contract():
     x, y = genkey(G, n)
     contract = VotingContract.deploy(y.x, y.y, {"from": admin})
     return x, y, contract
@@ -145,7 +145,7 @@ def get_encrypted_sum(contract):
 
 
 def main():
-    x, y, contract = organization()
+    x, y, contract = deploy_voting_contract()
     print(
         f"Generated keypair and deployed contract on address {contract.address}")
 
