@@ -11,6 +11,17 @@ import time
 from eth_abi import encode_single
 time.clock = time.time
 
+# Accounts
+accounts = brownie.accounts
+admin = accounts[0]
+voter1 = accounts[1]
+voter2 = accounts[2]
+
+# Curve parameters
+curve = registry.get_curve("secp256r1")
+n = curve.field.n
+G = curve.g
+
 
 def custom_hash(values):
     packed_data = b''.join(encode_single('uint256', i) for i in values)
@@ -73,8 +84,7 @@ def encrypt(v, n, y, G):
     k = random.randint(1, n - 1)
     C1 = k * G
     C2 = k * y + G * v
-
-    return C1, C2, to_contract_proof(generate_proof(v, C1, C2, k, n, G, y))
+    return C1, C2, k
 
 
 def decrypt(C1, C2, G, x):
@@ -93,17 +103,51 @@ def genkey(G, n):
     return x, y
 
 
-def main():
-    accounts = brownie.accounts
-    admin = accounts[0]
-    voter1 = accounts[1]
-    voter2 = accounts[2]
-    curve = registry.get_curve("secp256r1")
-    n = curve.field.n
-    G = curve.g
+def organization():
     x, y = genkey(G, n)
-
     contract = VotingContract.deploy(y.x, y.y, {"from": admin})
+    return x, y, contract
+
+
+def cast_vote(voter, vote, contract, stake):
+    (yx, yy) = contract.Y()
+    y = ec.Point(curve, yx, yy)
+
+    C1, C2, k = encrypt(vote, n, y, G)
+
+    # generate a zkp to prove that the vote is either 1 or 0.
+    proof = generate_proof(vote, C1, C2, k, n, G, y)
+    proof_flat = to_contract_proof(proof)
+
+    C1_x = int(C1.x)
+    C1_y = int(C1.y)
+    C2_x = int(C2.x)
+    C2_y = int(C2.y)
+
+    contract.castVote(C1_x, C1_y, C2_x, C2_y,
+                      proof_flat, stake, {"from": voter})
+
+    print(f"Voter {voter.address} casted their vote.")
+
+
+def decrypt_weighted_sum(contract, x):
+    C1, C2 = get_encrypted_sum(contract)
+    return decrypt(C1, C2, G, x)
+
+
+def get_encrypted_sum(contract):
+    # Read the encrpyted sum from the contract
+    (c1x, c1y), (c2x, c2y), _ = contract.encryptedSum()
+    print("The encrypted sum is: ", c1x, c1y, c2x, c2y)
+    C1 = ec.Point(curve, c1x, c1y)
+    C2 = ec.Point(curve, c2x, c2y)
+    return C1, C2
+
+
+def main():
+    x, y, contract = organization()
+    print(
+        f"Generated keypair and deployed contract on address {contract.address}")
 
     vote1 = 0
     stake1 = 100
@@ -111,29 +155,18 @@ def main():
     vote2 = 1
     stake2 = 400
 
-    (vote1_c1, vote1_c2, proof1) = encrypt(vote1, n, y, G)
-    (vote2_c1, vote2_c2, proof2) = encrypt(vote2, n, y, G)
+    vote3 = randint(0, 1)
+    stake3 = randint(10, 300)
 
-    vote1_c1_x = int(vote1_c1.x)
-    vote1_c1_y = int(vote1_c1.y)
-    vote1_c2_x = int(vote1_c2.x)
-    vote1_c2_y = int(vote1_c2.y)
-    vote2_c1_x = int(vote2_c1.x)
-    vote2_c1_y = int(vote2_c1.y)
-    vote2_c2_x = int(vote2_c2.x)
-    vote2_c2_y = int(vote2_c2.y)
+    print("Casting votes:")
+    cast_vote(voter1, vote1, contract, stake1)
+    cast_vote(voter2, vote2, contract, stake2)
+    cast_vote(admin, vote3, contract, stake3)
 
-    print("Casting vote:")
-    contract.castVote(vote1_c1_x, vote1_c1_y, vote1_c2_x,
-                      vote1_c2_y, proof1, stake1, {"from": voter1})
-    contract.castVote(vote2_c1_x, vote2_c1_y, vote2_c2_x,
-                      vote2_c2_y, proof2, stake2, {"from": voter2})
+    stake_weighted_sum = decrypt_weighted_sum(contract, x)
+    print("The decrypted sum is: ", stake_weighted_sum)
 
-    (c1x, c1y), (c2x, c2y), _ = contract.encryptedSum()
+    total_staked = contract.stakes()
+    print("Total staked: ", total_staked)
 
-    print("The encrypted sum is: ", c1x, c1y, c2x, c2y)
-    c1 = ec.Point(curve, c1x, c1y)
-    c2 = ec.Point(curve, c2x, c2y)
-
-    cleartext = decrypt(c1, c2, G, x)
-    print("The cleartext is: ", cleartext)
+    print("The result is: ", stake_weighted_sum / total_staked)
