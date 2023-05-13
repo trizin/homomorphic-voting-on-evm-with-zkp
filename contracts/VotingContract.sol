@@ -130,30 +130,6 @@ contract VotingContract {
             keccak256(abi.encodePacked(_second.x, _second.y)));
     }
 
-    function getHash(
-        uint256[12] calldata values
-    ) internal pure returns (uint256) {
-        bytes32 h = sha256(
-            abi.encodePacked(
-                [
-                    values[0],
-                    values[1],
-                    values[2],
-                    values[3],
-                    values[4],
-                    values[5],
-                    values[6],
-                    values[7],
-                    values[8],
-                    values[9],
-                    values[10],
-                    values[11]
-                ]
-            )
-        );
-        return uint256(h);
-    }
-
     function verify_proof(
         Point memory C1,
         Point memory C2,
