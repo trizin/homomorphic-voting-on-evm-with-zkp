@@ -24,17 +24,13 @@ contract VotingContract {
         0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5;
     Point private G = Point(Gx, Gy); // Generator point
 
-    uint256 public Yx;
-    uint256 public Yy;
     Point public Y; // Public key, to be set by the constructor
 
     Vote public encryptedSum;
 
     constructor(uint256 yx, uint256 yy) {
-        Yx = yx;
-        Yy = yy;
         Y = Point(yx, yy);
-        require(EllipticCurve.isOnCurve(Yx, Yy, A, B, P), "not on curve haha");
+        require(EllipticCurve.isOnCurve(Y.x, Y.y, A, B, P), "not on curve haha");
     }
 
     struct Vote {
